@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f8f8f8;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .section-body {
+            padding: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .status-value {
+            padding: 4px 12px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 3px;
+            border-left: 3px solid #007bff;
+        }
+
+        .info-box h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PWA Test</h1>
+            <p>E-Presensi GPS V2 - Progressive Web App Testing</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <div class="section-header">PWA Status</div>
+                <div class="section-body">
+                    <div id="pwa-status"></div>
+                    <button class="btn" onclick="checkPWAStatus()">Refresh Status</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Service Worker</div>
+                <div class="section-body">
+                    <div id="sw-status"></div>
+                    <button class="btn" onclick="checkServiceWorker()">Check Service Worker</button>
+                    <button class="btn btn-danger" onclick="unregisterServiceWorker()">Unregister SW</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Manifest</div>
+                <div class="section-body">
+                    <div id="manifest-status"></div>
+                    <button class="btn" onclick="checkManifest()">Check Manifest</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Cache Status</div>
+                <div class="section-body">
+                    <div id="cache-status"></div>
+                    <button class="btn" onclick="checkCache()">Check Cache</button>
+                    <button class="btn btn-danger" onclick="clearCache()">Clear Cache</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Install Prompt</div>
+                <div class="section-body">
+                    <div id="install-status"></div>
+                    <button class="btn btn-success" onclick="triggerInstallPrompt()">Trigger Install Prompt</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Browser Information</div>
+                <div class="section-body">
+                    <div id="browser-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PWA Status Check
+        function checkPWAStatus() {
+            const statusDiv = document.getElementById('pwa-status');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isIOSStandalone = window.navigator.standalone === true;
+            const isPWA = isStandalone || isIOSStandalone;
+
+            let html = '';
+            html += `<div class="status-item">
+                <span class="status-label">Display Mode</span>
+                <span class="status-value ${isPWA ? 'status-ok' : 'status-info'}">${isPWA ? 'Standalone (PWA)' : 'Browser'}</span>
+            </div>`;
+
+            html += `<div class="status-item">
+                <span class="status-label">User Agent</span>
+                <span class="status-value status-info">${navigator.userAgent.substring(0, 50)}...</span>
+            </div>`;
+
+            statusDiv.innerHTML = html;
+        }
+
+        // Service Worker Check
+        function checkServiceWorker() {
+            const statusDiv = document.getElementById('sw-status');
+            let html = '';
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    if (registrations.length > 0) {
+                        html += `<div class="status-item">
+                            <span class="status-label">Service Worker</span>
+                            <span class="status-value status-ok">Registered (${registrations.length} active)</span>
+                        </div>`;
+                        registrations.forEach((reg, index) => {
+                            html += `<div class="status-item">
+                                <span class="status-label">SW ${index + 1}</span>
+                                <span class="status-value status-info">${reg.scope}</span>
+                            </div>`;
+                        });
+                    } else {
+                        html += `<div class="status-item">
+                            <span class="status-label">Service Worker</span>
+                            <span class="status-value status-warning">Not registered</span>
+                        </div>`;
+                    }
+                    statusDiv.innerHTML = html;
+                });
+            } else {
+                html += `<div class="status-item">
+                    <span class="status-label">Service Worker</span>
+                    <span class="status-value status-error">Not supported</span>
+                </div>`;
+                statusDiv.innerHTML = html;
+            }
+        }
+
+        // Manifest Check
+        function checkManifest() {
+            const statusDiv = document.getElementById('manifest-status');
+            let html = '';
+
+            fetch('/manifest.json')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Manifest not found');
+                })
+                .then(manifest => {
+                    html += `<div class="status-item">
+                        <span class="status-label">Manifest</span>
+                        <span class="status-value status-ok">Found and valid</span>
+                    </div>`;
+                    html += `<div class="status-item">
+                        <span class="status-label">App Name</span>
+                        <span class="status-value status-info">${manifest.name}</span>
+                    </div>`;
+                    html += `<div class="status-item">
+                        <span class="status-label">Short Name</span>
+                        <span class="status-value status-info">${manifest.short_name}</span>
+                    </div>`;
+                    html += `<div class="status-item">
+                        <span class="status-label">Theme Color</span>
+                        <span class="status-value status-info">${manifest.theme_color}</span>
+                    </div>`;
+                    html += `<div class="status-item">
+                        <span class="status-label">Icons</span>
+                        <span class="status-value status-info">${manifest.icons.length} icons</span>
+                    </div>`;
+                    statusDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    html += `<div class="status-item">
+                        <span class="status-label">Manifest</span>
+                        <span class="status-value status-error">${error.message}</span>
+                    </div>`;
+                    statusDiv.innerHTML = html;
+                });
+        }
+
+        // Cache Check
+        function checkCache() {
+            const statusDiv = document.getElementById('cache-status');
+            let html = '';
+
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    if (cacheNames.length > 0) {
+                        html += `<div class="status-item">
+                            <span class="status-label">Cache</span>
+                            <span class="status-value status-ok">${cacheNames.length} cache(s) found</span>
+                        </div>`;
+                        cacheNames.forEach(cacheName => {
+                            caches.open(cacheName).then(cache => {
+                                cache.keys().then(keys => {
+                                    html += `<div class="status-item">
+                                        <span class="status-label">${cacheName}</span>
+                                        <span class="status-value status-info">${keys.length} items</span>
+                                    </div>`;
+                                    statusDiv.innerHTML = html;
+                                });
+                            });
+                        });
+                    } else {
+                        html += `<div class="status-item">
+                            <span class="status-label">Cache</span>
+                            <span class="status-value status-warning">No caches found</span>
+                        </div>`;
+                        statusDiv.innerHTML = html;
+                    }
+                });
+            } else {
+                html += `<div class="status-item">
+                    <span class="status-label">Cache</span>
+                    <span class="status-value status-error">Not supported</span>
+                </div>`;
+                statusDiv.innerHTML = html;
+            }
+        }
+
+        // Install Prompt Check
+        function triggerInstallPrompt() {
+            const statusDiv = document.getElementById('install-status');
+            let html = '';
+
+            // Check if beforeinstallprompt is supported
+            if ('beforeinstallprompt' in window) {
+                html += `<div class="status-item">
+                    <span class="status-label">Install Prompt</span>
+                    <span class="status-value status-ok">Supported</span>
+                </div>`;
+            } else {
+                html += `<div class="status-item">
+                    <span class="status-label">Install Prompt</span>
+                    <span class="status-value status-warning">Not supported or already installed</span>
+                </div>`;
+            }
+
+            // Check if app is already installed
+            const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true;
+
+            if (isInstalled) {
+                html += `<div class="status-item">
+                    <span class="status-label">App Status</span>
+                    <span class="status-value status-info">Already installed as PWA</span>
+                </div>`;
+            } else {
+                html += `<div class="status-item">
+                    <span class="status-label">App Status</span>
+                    <span class="status-value status-info">Running in browser</span>
+                </div>`;
+            }
+
+            statusDiv.innerHTML = html;
+        }
+
+        // Browser Info
+        function showBrowserInfo() {
+            const infoDiv = document.getElementById('browser-info');
+            const info = {
+                'User Agent': navigator.userAgent.substring(0, 60) + '...',
+                'Platform': navigator.platform,
+                'Language': navigator.language,
+                'Online': navigator.onLine ? 'Yes' : 'No',
+                'Cookie Enabled': navigator.cookieEnabled ? 'Yes' : 'No',
+                'Do Not Track': navigator.doNotTrack || 'Not set',
+                'Screen Resolution': `${screen.width}x${screen.height}`,
+                'Viewport': `${window.innerWidth}x${window.innerHeight}`,
+                'Device Pixel Ratio': window.devicePixelRatio
+            };
+
+            let html = '';
+            Object.entries(info).forEach(([key, value]) => {
+                html += `<div class="status-item">
+                    <span class="status-label">${key}</span>
+                    <span class="status-value status-info">${value}</span>
+                </div>`;
+            });
+
+            infoDiv.innerHTML = html;
+        }
+
+        // Clear Cache
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                }).then(() => {
+                    document.getElementById('cache-status').innerHTML =
+                        '<div class="status-item"><span class="status-label">Cache</span><span class="status-value status-ok">Cleared successfully</span></div>';
+                });
+            }
+        }
+
+        // Unregister Service Worker
+        function unregisterServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    return Promise.all(
+                        registrations.map(registration => registration.unregister())
+                    );
+                }).then(() => {
+                    document.getElementById('sw-status').innerHTML =
+                        '<div class="status-item"><span class="status-label">Service Worker</span><span class="status-value status-ok">Unregistered successfully</span></div>';
+                });
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkPWAStatus();
+            checkServiceWorker();
+            checkManifest();
+            checkCache();
+            triggerInstallPrompt();
+            showBrowserInfo();
+        });
+
+        // Listen for install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-status').innerHTML +=
+                '<div class="status-item"><span class="status-label">Install Prompt</span><span class="status-value status-ok">Ready to show</span></div>';
+        });
+
+        // Listen for app installed
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('install-status').innerHTML +=
+                '<div class="status-item"><span class="status-label">App</span><span class="status-value status-ok">Successfully installed!</span></div>';
+        });
+    </script>
+</body>
+
+</html>

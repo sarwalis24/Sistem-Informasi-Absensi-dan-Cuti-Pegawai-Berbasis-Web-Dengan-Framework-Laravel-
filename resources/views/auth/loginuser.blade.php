@@ -118,7 +118,7 @@
 
 
                    <p class="text-muted text-center">
-                       <?php echo "<b>Copyright © " . (int)date('Y') . " Universitas Annuqayah</b>"; ?>
+                       <?php echo "<b>Copyright © " . (int)date('Y') . " Kelompok 3</b>"; ?>
                             </p>
 
 

@@ -236,20 +236,28 @@ class PresensiController extends Controller
         //$tanggal_presensi = $lintas_hari == 1 ? $tanggal_kemarin : $tanggal_sekarang;
 
         //Get Lokasi User
-        $koordinat_user = explode(",", $lokasi);
-        $latitude_user = $koordinat_user[0];
-        $longitude_user = $koordinat_user[1];
+       $koordinat_user = explode(",", $lokasi);
+if (count($koordinat_user) < 2) {
+    return response()->json([
+        'message' => 'Lokasi GPS tidak terdeteksi. Pastikan GPS Anda aktif dan coba lagi.',
+        'notifikasi' => 'notifikasi_radius' // Anda bisa buat notifikasi baru jika perlu
+    ], 422); // 422: Unprocessable Entity
+}
+$latitude_user = $koordinat_user[0];
+$longitude_user = $koordinat_user[1];
 
-        //Get Lokasi Kantor
-        $cabang = Cabang::where('kode_cabang', $karyawan->kode_cabang)->first();
-        // $lokasi_kantor = $cabang->lokasi_cabang;
-        $lokasi_kantor = $request->lokasi_cabang;
 
-
-
-        $koordinat_kantor = explode(",", $lokasi_kantor);
-        $latitude_kantor = $koordinat_kantor[0];
-        $longitude_kantor = $koordinat_kantor[1];
+//Get Lokasi Kantor dan Validasi
+$cabang = Cabang::where('kode_cabang', $karyawan->kode_cabang)->first();
+$lokasi_kantor = $request->lokasi_cabang;
+$koordinat_kantor = explode(",", $lokasi_kantor);
+if (count($koordinat_kantor) < 2) {
+    return response()->json([
+        'message' => 'Lokasi kantor tidak valid. Hubungi administrator.',
+    ], 422);
+}
+$latitude_kantor = $koordinat_kantor[0];
+$longitude_kantor = $koordinat_kantor[1];
 
         $jarak = hitungjarak($latitude_kantor, $longitude_kantor, $latitude_user, $longitude_user);
 
